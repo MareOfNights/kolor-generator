@@ -1,4 +1,4 @@
-# kolor-generator
+# kolor-grabber
 
 ![Screenshot](screenshot.png)
 
