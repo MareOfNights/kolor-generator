@@ -47,7 +47,7 @@ class Line:
 		if re.match('.*=.*', text) and re.match('.+,.+,.+', text.split('=')[1]):
 			self.prefix = text.split('=')[0] + '='
 			self.color = Color(text.split('=')[1])
-		elif re.match('.*=#.*', text):
+		elif re.match('.*#[0-9A-Fa-f]{6}.*', text):
 			self.prefix = text.split('#')[0]
 			self.color = Color(text.split('#')[1])
 		elif re.match('#[0-9A-Fa-f]{6}', text):
@@ -87,7 +87,7 @@ class Document:
 		for line in self.lines:
 			line.set_palette(palette)
 
-	def to_file(self, path, hex=False):
+	def to_file(self, path, hex=True):
 		with open(path, 'w') as f:
 			f.write(self.get_document(hex))
 
@@ -105,6 +105,8 @@ if op == 'generate-all':
 		template = f.read()
 	with open('terminator.template', 'r') as f:
 		terminator = f.read()
+	with open('st.template', 'r') as f:
+		st = f.read()
 	for file_name in os.listdir(sys.argv[2]):
 		if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif')):
 			theme_name = re.sub('\\.[a-z]*', '', file_name)
@@ -114,6 +116,12 @@ if op == 'generate-all':
 			suffix = ' light' if light else ' dark'
 			doc.change_theme_name(theme_name + suffix)
 			doc.to_file(COLOR_SCHEME_DIR + theme_name + suffix + '.colors')
+			#set Terminal themes
+			doc = Document(st)
+			doc.set_palette(pal)
+			suffix = ' light' if light else ' dark'
+			with open(theme_name + suffix + '.st.template', 'w') as f:
+				f.write(re.sub(',\n}', '\n}', re.sub(r'(#[0-9A-Fa-f]{6})(\n)', r'\1",\2', doc.get_document(hex))))
 			doc = Document(terminator)
 			doc.set_palette(pal)
 			print('Terminator String (paste in ~/.config/terminator/config):')
@@ -135,6 +143,12 @@ if op == 'generate':
 	suffix = ' light' if light else ' dark'
 	doc.change_theme_name(image_name + suffix)
 	doc.to_file(COLOR_SCHEME_DIR + image_name + suffix + '.colors')
+	with open('st.template', 'r') as f:
+		doc = Document(f.read())
+	doc.set_palette(palette)
+	suffix = ' light' if light else ' dark'
+	with open(image_name + suffix + '.st.template', 'w') as f:
+		f.write(re.sub(',\n}', '\n}', re.sub(r'(#[0-9A-Fa-f]{6})(\n)', r'\1",\2', doc.get_document(hex))))
 	with open('terminator.template', 'r') as f:
 		doc = Document(f.read())
 	doc.set_palette(palette)
